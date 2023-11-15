@@ -1,0 +1,196 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id_User        Int             @id @default(autoincrement())
+  username       String          @unique
+  first_name     String?         @default("")
+  last_name      String?         @default("")
+  email          String?         @default("")
+  password       String?         @default("")
+  address        String?         @default("")
+  city           String?         @default("")
+  phone          String?         @default("")
+  created_at     DateTime        @default(now())
+  updated_at     DateTime        @updatedAt
+  deleted_at     DateTime        @default(now())
+  role           String?         @default("customer") //admin , owner
+  status         String          @default("active") //inactive deleted
+  carts          Cart[]          @relation("carts")
+  customerOrders Order[]         @relation("customerOrders")
+  staffOrders    Order[]         @relation("staffOrders")
+  reviews        Review[]        @relation("customerReview")
+  History_Order  History_Order[] @relation("HOrder_Cus")
+  product_liked  Product_Liked[] @relation("proLike_user")
+}
+
+model Product_Liked {
+  id_PL      Int      @id @default(autoincrement())
+  id_Pro     Int
+  id_User    Int
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  product Product @relation("proLike_pro", fields: [id_Pro], references: [id_Pro])
+  user    User    @relation("proLike_user", fields: [id_User], references: [id_User])
+
+  @@index([id_Pro], map: "ProLike_Pro_fk")
+  @@index([id_User], map: "ProLike_User_fk")
+}
+
+model Category {
+  id_Cate     Int       @id @default(autoincrement())
+  name        String
+  description String?   @db.Text
+  image_Cate  String?   @default("/images/")
+  status      String //active, inactive, deleted
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+  deleted_at  DateTime?
+  products    Product[] @relation("products")
+}
+
+model Product {
+  id_Pro        Int             @id @default(autoincrement())
+  id_Cate       Int // Tham chiếu đến bảng Category
+  name          String
+  image_Pro     String?         @default("/images/")
+  description   String?         @db.Text
+  price         Float
+  discount      Float
+  quantity      Int
+  sold          Int?
+  slug          String //url key
+  status        String //active, inactive, deleted
+  feature       Boolean? //1 0 : Sản phẩm đc chú ý hay ko
+  created_at    DateTime        @default(now())
+  updated_at    DateTime?       @updatedAt
+  deleted_at    DateTime?
+  cartItems     CartItem[]      @relation("cartItems")
+  Order_Product Order_Product[] @relation("order_product")
+  nameCategory  Category        @relation("products", fields: [id_Cate], references: [id_Cate])
+  reviews       Review[]        @relation("reviewProduct")
+  product_liked Product_Liked[] @relation("proLike_pro")
+
+  @@index([id_Cate], map: "Product_category_id_fkey")
+}
+
+model Coupon {
+  id_Coupon         Int       @id @default(autoincrement())
+  code              String    @unique
+  type              String    @default("percent")
+  start_date        DateTime
+  end_date          DateTime
+  uses_per_customer Int
+  uses_per_coupon   Int
+  status            String
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+  deleted_at        DateTime?
+  value             Int?
+  min_spend         Float?    @db.Float
+  max_spend         Float?    @db.Float
+  orders            Order[]   @relation("couponOrders")
+}
+
+model Cart {
+  id_Cart    Int        @id @default(autoincrement())
+  id_Cus     Int //Tham chiếu đến bảng User
+  created_at DateTime   @default(now())
+  updated_at DateTime   @updatedAt
+  user       User       @relation("carts", fields: [id_Cus], references: [id_User])
+  cartItems  CartItem[] @relation("CartItem")
+
+  @@index([id_Cus], map: "Cart_customer_id_fkey")
+}
+
+model CartItem {
+  id          Int      @id @default(autoincrement())
+  id_Cart     Int //Tham chiếu đến bảng Cart
+  id_Pro      Int //Tham chiếu đến bảng Product
+  quantity    Int
+  price       Float
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  cartName    Cart     @relation("CartItem", fields: [id_Cart], references: [id_Cart])
+  ProductName Product  @relation("cartItems", fields: [id_Pro], references: [id_Pro])
+
+  @@index([id_Cart], map: "CartItem_cart_id_fkey")
+  @@index([id_Pro], map: "CartItem_product_id_fkey")
+}
+
+model Order {
+  id_Order      Int             @id @default(autoincrement())
+  id_Cus        Int //Tham chiếu đến bảng User
+  id_Staff      Int //Tham chiếu đến bảng User
+  status        String //
+  shipping_fee  Float?          @db.Float
+  total         Float?          @db.Float
+  id_Coupon     Int
+  created_at    DateTime        @default(now())
+  canceled_at   DateTime?
+  completed_at  DateTime?
+  delivery_at   DateTime?
+  couponName    Coupon          @relation("couponOrders", fields: [id_Coupon], references: [id_Coupon])
+  customerName  User            @relation("customerOrders", fields: [id_Cus], references: [id_User])
+  staffName     User            @relation("staffOrders", fields: [id_Staff], references: [id_User])
+  Order_Product Order_Product[] @relation("order_orderPro")
+  History_Order History_Order[] @relation("HOrder_Order")
+
+  @@index([id_Coupon], map: "Order_coupon_id_fkey")
+  @@index([id_Cus], map: "Order_customer_id_fkey")
+  @@index([id_Staff], map: "Order_staff_id_fkey")
+}
+
+model Order_Product {
+  id_Order_Pro Int       @id @default(autoincrement())
+  id_Order     Int
+  id_Pro       Int
+  quantity     Int?
+  price        Float?    @db.Float
+  created_at   DateTime? @default(now())
+  updated_at   DateTime? @updatedAt @db.DateTime(0)
+  deleted_at   DateTime? @db.DateTime(0)
+  order        Order     @relation("order_orderPro", fields: [id_Order], references: [id_Order])
+  product      Product   @relation("order_product", fields: [id_Pro], references: [id_Pro])
+
+  @@index([id_Order], map: "order_id")
+  @@index([id_Pro], map: "product_id")
+}
+
+model History_Order {
+  id_HOrder   Int       @id @default(autoincrement())
+  code_HOrder String    @unique
+  id_Cus      Int
+  id_Order    Int
+  created_at  DateTime? @default(now())
+  updated_at  DateTime  @updatedAt
+  deleted_at  DateTime
+  order       Order     @relation("HOrder_Order", fields: [id_Order], references: [id_Order])
+  user        User      @relation("HOrder_Cus", fields: [id_Cus], references: [id_User])
+
+  @@index([id_Order], map: "HOrder_Order_id_fk")
+  @@index([id_Cus], map: "HOrder_User_id_fk")
+}
+
+model Review {
+  id_Review    Int      @id @default(autoincrement())
+  id_Pro       Int
+  id_Cus       Int
+  title        String
+  content      String
+  like         Int
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+  customerName User     @relation("customerReview", fields: [id_Cus], references: [id_User])
+  productName  Product  @relation("reviewProduct", fields: [id_Pro], references: [id_Pro])
+
+  @@index([id_Cus], map: "Review_customer_id_fkey")
+  @@index([id_Pro], map: "Review_product_id_fkey")
+}
