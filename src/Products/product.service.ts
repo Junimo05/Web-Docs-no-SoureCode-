@@ -1,10 +1,10 @@
+/* eslint-disable prettier/prettier */
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import { ProductDto } from 'src/auth/dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Product, Prisma } from '@prisma/client';
 @Injectable({})
 export class ProductService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async getAllProducts() {
     try {
@@ -21,12 +21,37 @@ export class ProductService {
     try {
       const product = await this.prisma.product.findUnique({
         where: { id_Pro: Number(id) },
+        include: {
+          nameCategory: {
+            select: {
+              name: true,
+            },
+          },
+        },
       });
       if (product) {
         return product;
       }
     } catch (error) {
       throw new ForbiddenException('can not find product');
+    }
+  }
+
+  async getProductByCategory(category: string) {
+    try {
+      const product = await this.prisma.category.findFirst({
+        where: {
+          name: category,
+        },
+        include: {
+          products: true,
+        },
+      });
+      if (product) {
+        return product;
+      }
+    } catch (error) {
+      throw new ForbiddenException('can not find product by category');
     }
   }
 

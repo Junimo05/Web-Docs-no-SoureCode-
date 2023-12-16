@@ -4,7 +4,7 @@ import { authModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ConfigModule } from '@nestjs/config';
-import { CategoryModule } from './Category/category.module';
+import { CategoryModule } from './category/category.module';
 import { ProductModule } from './Products/product.module';
 import { CouponModule } from './coupon/coupon.module';
 import { CartModule } from './cart/cart.module';
@@ -35,4 +35,4 @@ import { ReviewModule } from './review/review.module';
   controllers: [],
   providers: [],
 })
-export class AppModule {}
+export class AppModule { }

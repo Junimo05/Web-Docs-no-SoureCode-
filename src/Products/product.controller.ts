@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import {
   Body,
   Controller,
@@ -13,7 +14,7 @@ import { Product } from '@prisma/client';
 
 @Controller('product')
 export class ProductController {
-  constructor(private productService: ProductService) {}
+  constructor(private productService: ProductService) { }
 
   @Get('hello')
   getHello() {
@@ -30,6 +31,11 @@ export class ProductController {
   @Get(':id')
   async getProductById(@Param('id') id: string) {
     return await this.productService.getProductById(id);
+  }
+
+  @Get('/categorys/:category')
+  async getProductByCategory(@Param('category') category: string) {
+    return await this.productService.getProductByCategory(category);
   }
 
   @Post()

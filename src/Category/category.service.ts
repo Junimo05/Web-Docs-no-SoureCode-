@@ -1,10 +1,11 @@
+/* eslint-disable prettier/prettier */
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { CategoryDto } from 'src/auth/dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 // import { Category, Product} from '@prisma/client'
 @Injectable({})
 export class CategoryService {
-  constructor(private prismaService: PrismaService) {}
+  constructor(private prismaService: PrismaService) { }
 
   async getCategory() {
     return await this.prismaService.category.findMany();
